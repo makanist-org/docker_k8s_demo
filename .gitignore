@@ -103,4 +103,8 @@ dist
 # TernJS port file
 .tern-port
 
+# Exclude chart dependencies
+k8s/helm/charts/*/charts/
+k8s/helm/charts/*/Chart.lock
+
 .DS_Store

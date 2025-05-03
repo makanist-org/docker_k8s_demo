@@ -1,5 +1,38 @@
 const express = require('express');
+const promClient = require('prom-client');
 const app = express();
+
+// Initialize Prometheus metrics
+const collectDefaultMetrics = promClient.collectDefaultMetrics;
+const Registry = promClient.Registry;
+const register = new Registry();
+collectDefaultMetrics({ register });
+
+// Custom metrics
+const httpRequestCounter = new promClient.Counter({
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests',
+    labelNames: ['method', 'path', 'status'],
+    registers: [register]
+});
+
+const httpRequestDuration = new promClient.Histogram({
+    name: 'http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
+    labelNames: ['method', 'path'],
+    registers: [register]
+});
+
+// Middleware to track metrics
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        httpRequestDuration.observe({ method: req.method, path: req.path }, duration / 1000);
+        httpRequestCounter.inc({ method: req.method, path: req.path, status: res.statusCode });
+    });
+    next();
+});
 
 app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -28,6 +61,12 @@ const CONTACTS = [
 
 app.get('/contacts', (req, res) => {
   res.json({contacts: CONTACTS});
+});
+
+// Metrics endpoint
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.send(await register.metrics());
 });
 
 app.listen(3000, () =>{

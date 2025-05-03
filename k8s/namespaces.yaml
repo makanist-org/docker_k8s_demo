@@ -4,3 +4,10 @@ metadata:
   name: docker-demo-namespace
   labels:
     name: docker-demo-namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grafana-monitoring
+  labels:
+    name: grafana-monitoring
