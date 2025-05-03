@@ -19,6 +19,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Verify Docker Login
+      run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin <<< ${{ secrets.DOCKERHUB_TOKEN }}
+
     - name: Make script executable
       run: chmod +x Docker/docker-push.sh
 
@@ -27,7 +30,11 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       run: |
         cd Docker
-        ./docker-push.sh
+        if ! ./docker-push.sh; then
+          echo "Error: Failed to build or push Docker image"
+          docker images
+          exit 1
+        fi
 
     - name: Commit and push version update
       run: |
