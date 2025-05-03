@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-server-deployment
+  namespace: docker-demo-namespace
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels: 
       app: app-server
@@ -13,9 +14,11 @@ spec:
       labels: 
         app: app-server
     spec:
+      imagePullSecrets:
+        - name: docker-hub-creds
       containers:
         - name: app-server
-          image: cumuluscycles/eks-demo-app:1.0
+          image: makanist/docker-kubernetes-test:latest  # or use specific version like :1.0.0
           ports:
             - containerPort: 3000
 
@@ -25,6 +28,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: app-server-service
+  namespace: docker-demo-namespace
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
   labels: 
     app: app-server
 spec:
