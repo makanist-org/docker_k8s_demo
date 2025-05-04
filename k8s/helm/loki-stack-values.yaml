@@ -9,6 +9,8 @@ grafana:
 
 prometheus:
   enabled: true
+  nodeExporter:
+    enabled: false  # Disable node-exporter for Mac compatibility
   alertmanager:
     persistentVolume:
       enabled: false

@@ -2,11 +2,31 @@ const express = require('express');
 const promClient = require('prom-client');
 const app = express();
 
-// Initialize Prometheus metrics
+// Initialize default Prometheus metrics collector
 const collectDefaultMetrics = promClient.collectDefaultMetrics;
-const Registry = promClient.Registry;
-const register = new Registry();
-collectDefaultMetrics({ register });
+const register = new promClient.Registry();
+
+// Start collecting default metrics with more specific configuration
+collectDefaultMetrics({ 
+    register,
+    prefix: 'nodejs_app_', // Add prefix to differentiate your app metrics
+    labels: { // Add custom labels for better filtering
+        app: 'contacts-service',
+        environment: process.env.NODE_ENV || 'development'
+    },
+    timeout: 10000,  // Collection interval in ms
+    gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5],  // Customize GC duration buckets
+});
+
+// Add a basic counter to verify metrics
+const startupCounter = new promClient.Counter({
+    name: 'nodejs_app_startup_total',
+    help: 'Counter that increments on application startup',
+    registers: [register]
+});
+
+// Increment startup counter
+startupCounter.inc();
 
 // Custom metrics
 const httpRequestCounter = new promClient.Counter({
@@ -69,6 +89,6 @@ app.get('/metrics', async (req, res) => {
     res.send(await register.metrics());
 });
 
-app.listen(3000, () =>{
-   console.log('Server running on port 3000.'); 
+app.listen(3000, () => {
+    console.log('Server running on port 3000.');
 });
