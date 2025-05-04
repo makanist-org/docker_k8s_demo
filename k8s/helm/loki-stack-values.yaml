@@ -4,7 +4,7 @@ grafana:
     type: LoadBalancer
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    port: 80
+    port: 9090
     targetPort: 3000
   # Add Loki datasource automatically
   additionalDataSources:
@@ -34,6 +34,7 @@ prometheus:
       enabled: false
     service:
       type: ClusterIP
+      port: 9090  # Update Prometheus server port
     extraScrapeConfigs: |
       - job_name: 'nodejs-app'
         scrape_interval: 10s
