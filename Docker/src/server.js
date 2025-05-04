@@ -2,64 +2,52 @@ const express = require('express');
 const promClient = require('prom-client');
 const app = express();
 
-// Initialize default Prometheus metrics collector
-const collectDefaultMetrics = promClient.collectDefaultMetrics;
+// Initialize Prometheus metrics registry
 const register = new promClient.Registry();
 
-// Start collecting default metrics with more specific configuration
-collectDefaultMetrics({ 
+// Configure default metrics with better naming
+promClient.collectDefaultMetrics({
     register,
-    prefix: 'nodejs_app_', // Add prefix to differentiate your app metrics
-    labels: { // Add custom labels for better filtering
+    prefix: 'nodejs_',
+    timeout: 5000,
+    labels: {
         app: 'contacts-service',
         environment: process.env.NODE_ENV || 'development'
-    },
-    timeout: 10000,  // Collection interval in ms
-    gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5],  // Customize GC duration buckets
+    }
 });
 
-// Add a basic counter to verify metrics
-const startupCounter = new promClient.Counter({
-    name: 'nodejs_app_startup_total',
-    help: 'Counter that increments on application startup',
+// HTTP request metrics
+const httpRequestTotal = new promClient.Counter({
+    name: 'nodejs_http_requests_total',
+    help: 'Total number of HTTP requests',
+    labelNames: ['method', 'path', 'status'],
     registers: [register]
 });
 
-// Increment startup counter
-startupCounter.inc();
-
-// Custom metrics with nodejs_app_ prefix
-const httpRequestCounter = new promClient.Counter({
-    name: 'nodejs_app_http_requests_total',
-    help: 'Total number of HTTP requests by endpoint',
-    labelNames: ['method', 'endpoint', 'status'],
+const httpRequestDuration = new promClient.Gauge({
+    name: 'nodejs_http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
+    labelNames: ['method', 'path'],
     registers: [register]
 });
 
-const httpRequestDuration = new promClient.Histogram({
-    name: 'nodejs_app_http_duration_seconds',
-    help: 'Duration of HTTP requests in seconds by endpoint',
-    labelNames: ['method', 'endpoint'],
-    buckets: [0.1, 0.5, 1, 2, 5],
+// Application startup metric
+const appStartTime = new promClient.Gauge({
+    name: 'nodejs_app_start_time',
+    help: 'Application start timestamp',
     registers: [register]
 });
+appStartTime.setToCurrentTime();
 
-// Middleware to track metrics with endpoint information
+// Middleware for HTTP metrics
 app.use((req, res, next) => {
     const start = Date.now();
-    const endpoint = req.path;  // Will capture '/metrics' or '/contacts'
-    
+    const path = req.route ? req.route.path : req.path;
+
     res.on('finish', () => {
-        const duration = Date.now() - start;
-        httpRequestDuration.observe({ 
-            method: req.method, 
-            endpoint: endpoint 
-        }, duration / 1000);
-        httpRequestCounter.inc({ 
-            method: req.method, 
-            endpoint: endpoint,
-            status: res.statusCode 
-        });
+        const duration = (Date.now() - start) / 1000;
+        httpRequestTotal.labels(req.method, path, res.statusCode).inc();
+        httpRequestDuration.labels(req.method, path).set(duration);
     });
     next();
 });
