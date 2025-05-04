@@ -6,11 +6,26 @@ grafana:
       service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
     port: 80
     targetPort: 3000
+  # Add Loki datasource automatically
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki:3100
+      access: proxy
+      jsonData:
+        maxLines: 1000
+
+loki:
+  enabled: true
+  persistence:
+    enabled: false
+  service:
+    port: 3100
 
 prometheus:
   enabled: true
   nodeExporter:
-    enabled: false  # Disable node-exporter for Mac compatibility
+    enabled: false  # Disable node-exporter on Mac
   alertmanager:
     persistentVolume:
       enabled: false
@@ -19,3 +34,24 @@ prometheus:
       enabled: false
     service:
       type: ClusterIP
+    extraScrapeConfigs: |
+      - job_name: 'nodejs-app'
+        scrape_interval: 10s
+        metrics_path: /metrics
+        kubernetes_sd_configs:
+          - role: service
+            namespaces:
+              names:
+                - docker-demo-namespace
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+          - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+            action: replace
+            target_label: __address__
+            regex: (.+)(?::\d+);(\d+)
+            replacement: $1:$2

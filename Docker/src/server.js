@@ -28,28 +28,38 @@ const startupCounter = new promClient.Counter({
 // Increment startup counter
 startupCounter.inc();
 
-// Custom metrics
+// Custom metrics with nodejs_app_ prefix
 const httpRequestCounter = new promClient.Counter({
-    name: 'http_requests_total',
-    help: 'Total number of HTTP requests',
-    labelNames: ['method', 'path', 'status'],
+    name: 'nodejs_app_http_requests_total',
+    help: 'Total number of HTTP requests by endpoint',
+    labelNames: ['method', 'endpoint', 'status'],
     registers: [register]
 });
 
 const httpRequestDuration = new promClient.Histogram({
-    name: 'http_request_duration_seconds',
-    help: 'Duration of HTTP requests in seconds',
-    labelNames: ['method', 'path'],
+    name: 'nodejs_app_http_duration_seconds',
+    help: 'Duration of HTTP requests in seconds by endpoint',
+    labelNames: ['method', 'endpoint'],
+    buckets: [0.1, 0.5, 1, 2, 5],
     registers: [register]
 });
 
-// Middleware to track metrics
+// Middleware to track metrics with endpoint information
 app.use((req, res, next) => {
     const start = Date.now();
+    const endpoint = req.path;  // Will capture '/metrics' or '/contacts'
+    
     res.on('finish', () => {
         const duration = Date.now() - start;
-        httpRequestDuration.observe({ method: req.method, path: req.path }, duration / 1000);
-        httpRequestCounter.inc({ method: req.method, path: req.path, status: res.statusCode });
+        httpRequestDuration.observe({ 
+            method: req.method, 
+            endpoint: endpoint 
+        }, duration / 1000);
+        httpRequestCounter.inc({ 
+            method: req.method, 
+            endpoint: endpoint,
+            status: res.statusCode 
+        });
     });
     next();
 });
