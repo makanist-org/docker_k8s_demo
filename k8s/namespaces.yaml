@@ -11,3 +11,10 @@ metadata:
   name: grafana-monitoring
   labels:
     name: grafana-monitoring
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+  labels:
+    name: argocd

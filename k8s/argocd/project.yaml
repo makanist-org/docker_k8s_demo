@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: nodejs-project
+  namespace: argocd
+spec:
+  description: Project for NodeJS applications
+  sourceRepos:
+    - '*'  # Allow all repositories for now
+  destinations:
+    - namespace: docker-demo-namespace
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

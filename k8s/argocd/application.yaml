@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nodejs-app
+  namespace: argocd
+spec:
+  project: nodejs-project
+  source:
+    repoURL: git@github.com:SaiTejaMakani/Docker_k8s_demo.git  # Updated with correct username
+    targetRevision: HEAD
+    path: k8s/app-server
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: docker-demo-namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
