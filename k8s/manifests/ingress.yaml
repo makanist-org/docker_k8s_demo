@@ -4,6 +4,7 @@ metadata:
   name: nodejs-app-ingress
   namespace: docker-demo-namespace
 spec:
+  ingressClassName: nginx
   rules:
   - host: nodejs-app.local  # You can use this with /etc/hosts
     http:
