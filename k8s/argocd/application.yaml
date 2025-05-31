@@ -6,9 +6,9 @@ metadata:
 spec:
   project: nodejs-project
   source:
-    repoURL: git@github.com:SaiTejaMakani/Docker_k8s_demo.git  # Updated with correct username
+    repoURL: git@github.com:makanist-org/docker_k8s_demo.git
     targetRevision: HEAD
-    path: k8s/app-server
+    path: k8s/manifests # Path to the Kubernetes manifests for application
   destination:
     server: https://kubernetes.default.svc
     namespace: docker-demo-namespace

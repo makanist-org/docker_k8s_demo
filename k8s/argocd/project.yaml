@@ -6,7 +6,7 @@ metadata:
 spec:
   description: Project for NodeJS applications
   sourceRepos:
-    - '*'  # Allow all repositories for now
+    - 'git@github.com:makanist-org/docker_k8s_demo.git'  # Specific repository
   destinations:
     - namespace: docker-demo-namespace
       server: https://kubernetes.default.svc
