@@ -12,7 +12,11 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --set controller.service.type=NodePort \
   --set controller.hostPort.enabled=true \
   --set controller.hostPort.ports.http=80 \
-  --set controller.hostPort.ports.https=443
+  --set controller.hostPort.ports.https=443 \
+  --set controller.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set controller.tolerations[0].operator=Exists \
+  --set controller.tolerations[0].effect=NoSchedule \
+  --set controller.replicaCount=1
 
 # Wait for the ingress controller to be ready
 echo "Waiting for ingress controller to be ready..."
