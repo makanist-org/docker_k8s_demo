@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: nodejs-app
-        image: makanist/docker-kubernetes-test:latest
+        image: makanist/docker-kubernetes-test:1.0.24
         ports:
         - containerPort: 3000
         resources:
