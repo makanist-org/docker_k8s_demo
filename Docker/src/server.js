@@ -74,6 +74,11 @@ const CONTACTS = [
                       "name": "Bing Bang",
                       "email": "bingbang@test.com",
                       "cell": "000-123-6789"
+                    },
+                    {
+                      "name": "Makanist Bang",
+                      "email": "bingbang@test.com",
+                      "cell": "000-123-1224"
                     }
                 ];
 

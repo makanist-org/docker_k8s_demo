@@ -15,6 +15,7 @@ spec:
     spec:
       containers:
       - name: nodejs-app
+        # Image tag will be updated by ArgoCD Image Updater
         image: makanist/docker-kubernetes-test:1.0.24
         ports:
         - containerPort: 3000
