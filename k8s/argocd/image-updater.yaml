@@ -54,7 +54,6 @@ data:
     - name: Docker Hub
       prefix: docker.io
       api_url: https://registry-1.docker.io
-      credentials: pull-secret:argocd/dockerhub-secret
       ping: yes
       default: true
       insecure: false

@@ -9,7 +9,7 @@ This repository contains a demonstration of Docker and Kubernetes deployment for
   - `argocd/` - ArgoCD setup files
   - `helm-argocd/` - Helm charts for ArgoCD
   - `ingress/` - Ingress controller setup
-  - `manifests/` - Application manifests (deployment, service, ingress)
+  - `manifests/` - Application manifests (deployment, service, ingress, kustomization)
   - `namespaces.yaml` - Namespace definitions
 
 ## Prerequisites
@@ -48,7 +48,22 @@ This script will:
 
 After running the script, add the displayed SSH public key to your GitHub repository's deploy keys.
 
-### 4. Access ArgoCD UI
+### 4. Deploy ArgoCD Image Updater
+
+```bash
+kubectl apply -f k8s/argocd/image-updater.yaml
+```
+
+This will install the ArgoCD Image Updater, which automatically updates your application when new Docker images are pushed.
+
+### 5. Deploy the Application
+
+```bash
+kubectl apply -f k8s/argocd/project.yaml
+kubectl apply -f k8s/argocd/application.yaml
+```
+
+### 6. Access ArgoCD UI
 
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:80
@@ -58,7 +73,7 @@ Then open http://localhost:8080 in your browser.
 - Username: admin
 - Password: (displayed during setup)
 
-### 5. Access the Application
+### 7. Access the Application
 
 The application is deployed in the `docker-demo-namespace` namespace. To access it:
 
@@ -68,33 +83,21 @@ kubectl port-forward svc/nodejs-app -n docker-demo-namespace 3000:80
 
 Then open http://localhost:3000/contacts in your browser.
 
-## Ingress Setup (Optional)
+## CI/CD Pipeline
 
-An Ingress controller has been set up, but due to limitations with Kind/Docker Desktop, it's recommended to use port forwarding for local development.
+This project uses:
 
-If you want to try using Ingress:
+1. GitHub Actions for CI/CD:
+   - Automatically builds and pushes Docker images when code is pushed to the main branch
+   - Increments version numbers automatically
 
-```bash
-# Install the Ingress controller
-./k8s/ingress/install-ingress.sh
+2. ArgoCD for GitOps:
+   - Automatically deploys changes when the Git repository is updated
+   - Manages the application lifecycle
 
-# Add hostname to /etc/hosts
-echo "127.0.0.1 nodejs-app.local" | sudo tee -a /etc/hosts
-```
-
-Then try accessing http://nodejs-app.local/contacts (note: this may not work reliably in all environments).
-
-## Development Workflow
-
-1. Make changes to the application code
-2. Build and push the Docker image:
-   ```bash
-   docker build -t your-dockerhub-username/nodejs-app:latest .
-   docker push your-dockerhub-username/nodejs-app:latest
-   ```
-3. Update the image in the deployment manifest if needed
-4. Commit and push changes to the Git repository
-5. ArgoCD will automatically sync the changes to the cluster
+3. ArgoCD Image Updater:
+   - Automatically updates the application when new Docker images are pushed
+   - Uses semantic versioning to determine which images to deploy
 
 ## Troubleshooting
 
@@ -115,7 +118,7 @@ If you encounter issues:
    kubectl get application -n argocd
    ```
 
-4. If port forwarding doesn't work, ensure the service is running:
+4. Check ArgoCD Image Updater logs:
    ```bash
-   kubectl get svc -n docker-demo-namespace
+   kubectl logs -n argocd -l app.kubernetes.io/name=argocd-image-updater
    ```
