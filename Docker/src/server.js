@@ -84,12 +84,14 @@ const CONTACTS = [
 
 app.get('/contacts', (req, res) => {
   res.json({contacts: CONTACTS});
+  console.log('Contacts requested.');
 });
 
 // Metrics endpoint
 app.get('/metrics', async (req, res) => {
     res.set('Content-Type', register.contentType);
     res.send(await register.metrics());
+    console.log('Metrics requested.');
 });
 
 app.listen(3000, () => {
